@@ -1,0 +1,73 @@
+#include "WiFi.h"
+#include "HTTPClient.h"
+#include "DHTesp.h"
+
+const char* ssid ="Wokwi-GUEST";
+const char* password = "";
+const String url = "https://api.thingspeak.com/channels/1875121/feeds.json?api_key=ZN0YDG9J156TZGKP&";
+ 
+
+DHTesp dhtSensor;
+
+void setup() {
+  
+  Serial.begin(115200);
+  Serial.println("Iniciando Setup");
+  dhtSensor.setup(13, DHTesp::DHT22);
+  pinMode(3, OUTPUT);
+  pinMode(18, OUTPUT);
+  pinMode(14, OUTPUT);
+  pinMode(19, OUTPUT);
+  Serial.println("Finalizando Setup");
+
+}
+
+
+void setup() {
+  Serial.begin(115200);
+  dhtSensor.setup(DHT_PIN, DHTesp::DHT22);
+}
+
+HTTPClient http;
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("iniciando Setup!");
+  WiFi.begin(ssid, password);
+
+  while(WiFi.status() != WL_CONNECTED){
+    delay(500);
+    Serial.println("Conecting wifi...");
+  }
+  Serial.println("Wifi connected!");
+  Serial.println("Finalizando Setup");
+
+}
+
+
+void loop() {
+ 
+  //Capturando a temperatura
+  TempAndHumidity  data = dhtSensor.getTempAndHumidity();
+  float Temperatura = dhtSensor.getTemperature();
+  float Humidade = dhtSensor.getHumidity();
+  
+  String path = url + "field1=" + String(Temperatura) + "&field2" + String(Humidade);
+
+  http.begin(path);
+  int httpCode = http.GET(); 
+  String payload = http.getString();
+
+  Serial.println("HttpCode:" + String (httpCode));
+  Serial.println("Payload:" + payload);
+
+  delay(3000); 
+  
+  digitalWrite(3, HIGH); 
+  digitalWrite(18, HIGH);
+  delay(1000);
+  
+  digitalWrite(3, LOW);
+  digitalWrite(19, LOW);
+
+}
